@@ -1,0 +1,2 @@
+[2017-08-04 21:36:25] test.INFO: The use statement with non-compound name 'Exception' has no effect in line 4 on file C:\xampp\htdocs\yaroa_git\Examples\Defaults\Views\defaultView.php [] []
+[2017-08-04 21:36:32] test.INFO: The use statement with non-compound name 'stdClass' has no effect in line 3 on file C:\xampp\htdocs\yaroa_git\Examples\Defaults\Views\defaultView.php [] []

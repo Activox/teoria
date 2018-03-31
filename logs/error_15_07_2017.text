@@ -1,0 +1,5 @@
+[2017-07-15 14:45:09] test.INFO: mysqli_connect(): (HY000/1049): Unknown database 'ibs858' in line 96 on file C:\xampp\htdocs\yaroa_git\lib\database\Mysqli.php [] []
+[2017-07-15 14:51:15] test.INFO:  Internal Error please call the administrator  [] []
+[2017-07-15 14:55:42] test.INFO:  Internal Error please call the administrator  [] []
+[2017-07-15 14:55:43] test.INFO:  Internal Error please call the administrator  [] []
+[2017-07-15 15:06:51] test.INFO:  Sql Error ->  SELECT * FROM `public.users`   [] []

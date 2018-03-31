@@ -1,0 +1,27 @@
+{
+    "useDatabase"                                   :       true,
+    "appInDeveloping"                               :       true,
+    "instanceDatabase"                              :       "Mysqli",
+    
+    "title"                                         :       "Simulacion",
+    
+    "server"                                        :       "http://localhost/",
+    "defaultKeyRouting"                             :       "default",
+    
+    "dirModules"                                    :       "app",
+    "dirLayouts"                                    :       "layouts",
+    "dirProject"                                    :       "simulacion/",
+    "dirLogs"                                       :       "logs",
+    "dirMainFileJs"                                 :       "js",
+    "dirMainFileCss"                                :       "css",
+    
+    "fileLayoutError"                               :       "error",
+
+    "useStorageSession"                             :       false,
+    "storageTable"                                  :       "sessions",
+    "primaryKeyField"                               :       "record_id",
+    "storageIdField"                                :       "session_id",
+    "StorageDataField"                              :       "session_data",
+
+    "localservers"                                  :       "localhost,127.0.0.1,localhost:8080"
+}
