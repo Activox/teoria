@@ -6,7 +6,7 @@ Route::getJs(array("scriptSim"), "Defaults", array(), FALSE);
     <!-- Default box -->
     <div class="box">
         <div class="box-header with-border">
-            <h3 class="box-title">D Clase Shoes. Simulacon de una Orden en Modulos</h3>
+            <h3 class="box-title">D Clase Shoes. Teoria de una Orden en Modulos</h3>
         </div>
         <div class="box-body">
             <div class="row">
@@ -14,8 +14,7 @@ Route::getJs(array("scriptSim"), "Defaults", array(), FALSE);
                     <form id="frmSimulacion">
                         <div class="col-md-3">
                             <label>Temporada</label>
-                            <select class="form-control select2" style="width: 100%;" name="temporadacmb"
-                                    id="temporadacmb">
+                            <select class="form-control select2" style="width: 100%;" name="temporadacmb" id="temporadacmb">
                                 <option selected="selected" value="0">Select Option</option>
                                 <option value="1">Invierno</option>
                                 <option value="2">Primavera</option>
@@ -24,14 +23,34 @@ Route::getJs(array("scriptSim"), "Defaults", array(), FALSE);
                             </select>
                         </div>
                         <div class="col-md-3">
+                            <label>Cliente</label>
+                            <select class="form-control select2" style="width: 100%;" name="clientecmb" id="clientecmb">
+                                <option selected="selected" value="0">Select Option</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Producto</label>
+                            <select class="form-control select2" style="width: 100%;" name="productocmb" id="productocmb">
+                                <option selected="selected" value="0">Select Option</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Estilo</label>
+                            <select class="form-control select2" style="width: 100%;" name="stockcmb" id="stockcmb">
+                                <option selected="selected" value="0">Select Option</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
                             <label>Cant. Modulos</label>
-                            <input type="number" class="form-control" id="modulotxt" name="modulotxt" value="1" max="9"
-                                   min="1">
+                            <input type="number" class="form-control" id="modulotxt" name="modulotxt" value="1" max="9" min="1">
+                        </div>
+                        <div class="col-md-3">
+                            <label>Cant. Ordenes</label>
+                            <input type="number" class="form-control" id="ordentxt" name="ordentxt" value="1" max="9" min="1">
                         </div>
                         <div class="col-md-3">
                             <label>Cant. Pares</label>
-                            <input type="number" class="form-control" id="parestxt" name="parestxt" value="1" max="10000"
-                                   min="1">
+                            <input type="number" class="form-control" id="parestxt" name="parestxt" value="1" max="10000" min="1">
                         </div>
                     </form>
                     <div class="col-md-3">

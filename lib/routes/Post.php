@@ -14,7 +14,10 @@ class Post
     public static $_rules = array
     (
         //key (path request) => " Module's name '@' Class Name (without 'Controller' or 'Model') '.' Method to execute"
-        "simulacion" => "Defaults@Default.getSimulacion",
+        "doProcess" => "Defaults@Default.doProcess",
+        "getCustomer" => "Defaults@Default.getCustomer",
+        "getProductStyle" => "Defaults@Default.getProductStyle",
+        "getStyle" => "Defaults@Default.getStyle",
         "table" => "Defaults@Default.tableProblem",
         "reportProblem" => "Defaults@Default.getReportProblem",
         "reportProduccion" => "Defaults@Default.getReportProduccion"

@@ -1,17 +1,19 @@
 $(function () {
     $("#container").hide();
+
     $("#btnEject").on('click', function () {
         // tableProblem(463);
-        if ($("#temporadacmb").val() == 0) {
-            alertify.alert('Warning!', 'Debes seleccionar una estacion del año por lo menos.', function () {
+        if ($("#temporadacmb").val() == 0 || $("#clientecmb").val() == 0 || $("#productocmb").val() == 0 || $("#stockcmb").val() == 0) {
+            alertify.alert('Warning!', 'Porfavor completar todos los campos.', function () {
             });
             return;
         }
+
         $.ajax({
             type: 'post',
-            url: 'simulacion',
+            url: 'doProcess',
             data: {
-                content: 'text', data: $("#frmSimulacion").serializeObject()
+                content: 'json', data: $("#frmSimulacion").serializeObject()
             },
             dataType: "json",
             success: function (data) {
@@ -19,7 +21,7 @@ $(function () {
                 $('#tableDetails').html(data.table);
                 tableProblem(data.eject);
             },
-            error: function(p,r,m){
+            error: function (p, r, m) {
                 console.log(p.responseText);
                 console.log(r);
                 console.log(m);
@@ -28,33 +30,73 @@ $(function () {
 
     });
 
+    $("#clientecmb").on('change', function () {
+        $.ajax({
+            type: 'post',
+            url: 'getProductStyle',
+            data: {
+                content: 'json', data: $(this).val()
+            },
+            dataType: "json",
+            success: function (data) {
+                $("#productocmb").html(data.product);
+                $("#stockcmb").html(data.stock);
+            },
+            error: function (p, r, m) {
+                console.log(p.responseText);
+                console.log(r);
+                console.log(m);
+            }
+        });
+    });
+
+    $("#productocmb").on('change', function () {
+        $.ajax({
+            type: 'post',
+            url: 'getStyle',
+            data: {
+                content: 'text', data: $("#frmSimulacion").serializeObject()
+            },
+            dataType: "text",
+            success: function (data) {
+                $("#stockcmb").html(data);
+            },
+            error: function (p, r, m) {
+                console.log(p.responseText);
+                console.log(r);
+                console.log(m);
+            }
+        });
+    });
+
+    /* get problem table. */
     function tableProblem(data2) {
         $.ajax({
             type: 'post',
-            url : 'table',
+            url: 'table',
             data: {
                 content: 'text', data: data2
             },
-            dataType : "json",
-            success: function(data){
+            dataType: "json",
+            success: function (data) {
                 console.log(data);
                 if (data.code == 400) {
-                            $("#container").show();
-                            $('#tableProblem').html(data.tableProblem);
-                            let myData = [];
-                            $.each($.parseJSON(data.chart), function (key, value) {
-                                myData.push([value.problema, (value.cant_problema / value.sum_problem)]);
-                            });
-                            chart(myData);
-                        } else {
-                            $('#tableProblem').html('<div class="callout callout-success text-align-center">\n' +
-                                '                                        <h3 style="text-align: center;"><i class="fa fa-info"></i> Ningun dato\n' +
-                                '                                            encontrado</h3>\n' +
-                                '                                    </div>');
-                            $("#container").hide();
-                        }
+                    $("#container").show();
+                    $('#tableProblem').html(data.tableProblem);
+                    let myData = [];
+                    $.each($.parseJSON(data.chart), function (key, value) {
+                        myData.push([value.problema, (value.cant_problema / value.sum_problem)]);
+                    });
+                    chart(myData);
+                } else {
+                    $('#tableProblem').html('<div class="callout callout-success text-align-center">\n' +
+                        '                                        <h3 style="text-align: center;"><i class="fa fa-info"></i> Ningun dato\n' +
+                        '                                            encontrado</h3>\n' +
+                        '                                    </div>');
+                    $("#container").hide();
+                }
             },
-            error: function(p,r,m){
+            error: function (p, r, m) {
                 console.log(p.responseText);
                 console.log(r);
                 console.log(m);
@@ -64,6 +106,7 @@ $(function () {
 
     }
 
+    /* generate the charts */
     function chart(data) {
         Highcharts.chart('container', {
             chart: {
@@ -96,4 +139,21 @@ $(function () {
         });
     }
 
+    /* load the customer comboBox */
+    $.ajax({
+        type: 'post',
+        url: 'getCustomer',
+        data: {
+            content: 'text', data: $(this).val()
+        },
+        dataType: "text",
+        success: function (data) {
+            $("#clientecmb").html(data);
+        },
+        error: function (p, r, m) {
+            console.log(p.responseText);
+            console.log(r);
+            console.log(m);
+        }
+    });
 });

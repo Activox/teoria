@@ -46,7 +46,7 @@ class DefaultModel extends ModelORM
 
     public function setOrden($orden)
     {
-        $sql = " INSERT INTO ordenes (name,pares) VALUES ('$orden->name', '$orden->pares');  ";
+        $sql = " INSERT INTO ordenes (name,pares,style_id) VALUES ('$orden->name', '$orden->pares','$orden->stock_id');  ";
         $this->query($sql)->objectList();
         $sql2 = "SELECT max(id_record) max_id FROM ordenes;";
         return $this->query($sql2)->objectList();
@@ -70,13 +70,16 @@ class DefaultModel extends ModelORM
           ord.pares,
           act.id_operacion,
           act.tiempo,
+          (st.cost_production * ord.pares) production_cost,
+          ( select SUM(CASE WHEN act2.tiempo > 25 THEN 1 ELSE 0 END) from actividades act2 where act2.id_orden = ord.id_record ) count_time_extra,
             (
                 SELECT sum(act2.tiempo)
                 FROM actividades act2
                 WHERE act2.id_orden = ord.id_record
             ) total_time
         FROM ordenes ord
-          INNER JOIN actividades act ON act.id_orden = ord.id_record 
+          INNER JOIN actividades act ON act.id_orden = ord.id_record
+          INNER JOIN styles st ON st.id_record = ord.style_id 
         WHERE ord.active = 1 and act.ejecucion = $params->max_ejecion and act.id_modulo = $params->id_modulo
         GROUP BY 1,2,4
         ORDER BY 1 
@@ -161,8 +164,9 @@ class DefaultModel extends ModelORM
         return $this->query($sql)->objectList();
     }
 
-    public function getProblemsModule($params){
-        $sql="
+    public function getProblemsModule($params)
+    {
+        $sql = "
         SELECT
           act.id_modulo,
           act.id_problema,
@@ -174,7 +178,29 @@ class DefaultModel extends ModelORM
         WHERE act.id_problema != 0 and act.ejecucion = $params
         GROUP BY 1,2
         ";
-         return $this->query($sql)->objectList();
+        return $this->query($sql)->objectList();
+    }
+
+    public function getCustomer()
+    {
+        $sql = " SELECT cus.id_record, cus.description FROM customer cus ";
+        return $this->query($sql)->objectList();
+    }
+
+    public function getProductByCustomer($customerId)
+    {
+        $sql = " SELECT prod.id_record, prod.description FROM product prod where (prod.customer_id = $customerId or $customerId = 0 ); ";
+        return $this->query($sql)->objectList();
+    }
+
+    public function getStock($customerId = 0, $productId = 0)
+    {
+        $sql = "
+            SELECT st.id_record, st.description FROM styles st
+            inner join product prod on prod.id_record = st.product_id
+            where (st.product_id = $productId or $productId = 0 ) AND (prod.customer_id = $customerId or $customerId = 0) 
+        ";
+        return $this->query($sql)->objectList();
     }
 
 }

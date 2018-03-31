@@ -64,13 +64,15 @@ class DefaultController extends Controller
         return parent::getModel($model, $properties);
     }
 
-    public function getSimulacion()
+    public function doProcess()
     {
         /* get values */
         $data = \Factory::getInput('data');
         $params = new \stdClass();
         $params->temporada = $data['temporadacmb'];
         $params->modulo = $data['modulotxt'];
+        $params->order = $data['ordentxt'];
+        $params->cliente = $data['clientecmb'];
         /* get the current execution value */
         $result = $this->getModel()->getEjecucion();
         $params->max_ejecion = $result[0]->max_ejecion + 1;
@@ -79,52 +81,59 @@ class DefaultController extends Controller
         $html = new stdClass();
         $table = '';
         /* do the magic */
-        /* insertar la orden */
-        $orden = new \stdClass();
-        $orden->name = $this->randomKey(5);
-        $orden->pares = $data['parestxt'];
-        $id_orden = $this->getModel()->setOrden($orden);
-        for ($p = 1; $p <= $params->modulo; $p++) {
-            $params->cancel = 0;
-            foreach ($operations as $key => $value) {
-                /* ver si la orden no se cancelo en la operacion pasada */
-                if ($params->cancel == 0) {
-                    $operation_act = new \stdClass();
-                    $operation_act->id_orden = $id_orden[0]->max_id;
-                    $operation_act->id_modulo = $p;
-                    $operation_act->ejecucion = $params->max_ejecion;
-                    $operation_act->id_operation = $value->id_record;
-                    $operation_act->tiempo = (rand(5, 35));
-                    /* obtener todos los problemas que podria tener esa operacion */
-                    $problems = $this->getModel()->getOperationsProblems($value->id_record);
-                    $rand_problem = rand(0, count($problems));
-                    /* verificar si la orden se cancela */
-                    $rand = rand(1, 100);
-                    if ($rand > 90) {
-                        $operation_act->id_problem = 24;
-                        $params->cancel = 1;
-                    } else {
-                        /*buscar si en esta operacion hay un problema.*/
-                        $count_problems = 1;
-                        foreach ($problems as $key) {
-                            if ($rand_problem == $count_problems) {
-                                $operation_act->id_problem = $key->id_record;
-                                break;
-                            } else {
-                                $operation_act->id_problem = 0;
+        for ($m = 0; $m < $params->order; $m++) {
+            for ($p = 1; $p <= $params->modulo; $p++) {
+                /* insertar la orden */
+                $orden = new \stdClass();
+                $orden->name = "" . $params->cliente == 1 ? "SPR" . $this->randomKey(7) : ($params->cliente == 2 ? "SEB" . $this->randomKey(7) : ($params->cliente == 3 ? "TMB" . $this->randomKey(7) : "QV" . $this->randomKey(7)));
+                $orden->pares = $data['parestxt'];
+                $orden->stock_id = $data['stockcmb'];
+                $id_orden = $this->getModel()->setOrden($orden);
+                $params->cancel = 0;
+                foreach ($operations as $key => $value) {
+                    /* ver si la orden no se cancelo en la operacion pasada */
+                    if ($params->cancel == 0) {
+                        $operation_act = new \stdClass();
+                        $operation_act->id_orden = $id_orden[0]->max_id;
+                        $operation_act->id_modulo = $p;
+                        $operation_act->ejecucion = $params->max_ejecion;
+                        $operation_act->id_operation = $value->id_record;
+                        $operation_act->id_operation = $value->id_record;
+                        $operation_act->tiempo = (rand(5, 35));
+                        /* obtener todos los problemas que podria tener esa operacion */
+                        $problems = $this->getModel()->getOperationsProblems($value->id_record);
+                        $rand_problem = rand(0, count($problems));
+                        /* verificar si la orden se cancela */
+                        $rand = rand(1, 100);
+                        if ($rand > 90) {
+                            $operation_act->id_problem = 24;
+                            $params->cancel = 1;
+                        } else {
+                            /*buscar si en esta operacion hay un problema.*/
+                            $count_problems = 1;
+                            foreach ($problems as $key) {
+                                if ($rand_problem == $count_problems) {
+                                    $operation_act->id_problem = $key->id_record;
+                                    break;
+                                } else {
+                                    $operation_act->id_problem = 0;
+                                }
+                                $count_problems++;
                             }
-                            $count_problems++;
+                            /* si la temporada es invierno o verano aumentar el tiempo por la alta demanda. */
+                            if (($params->temporada == 1 || $params->temporada == 3) || $operation_act->id_problem != 0) {
+                                if ( rand(1, 100) > 65 ){
+                                    $poisson = round(abs(1 / (rand(1, 10000) / 10000) * log((rand(1, 10000) / 10000))), 2);
+                                    $operation_act->tiempo = $operation_act->tiempo + ($poisson * 10);
+                                }
+                            }
                         }
-                        /* si la temporada es invierno o verano aumentar el tiempo por la alta demanda. */
-                        if (($params->temporada == 1 || $params->temporada == 3) || $operation_act->id_problem != 0) {
-                            $poisson = round(abs(1 / (rand(1, 10000) / 10000) * log((rand(1, 10000) / 10000))), 2);
-                            $operation_act->tiempo = $operation_act->tiempo + ($poisson * 10);
-                        }
+                        $this->getModel()->setActividad($operation_act);
                     }
-                    $this->getModel()->setActividad($operation_act);
                 }
             }
         }
+
         /* construir las tablas para cada modulo */
         for ($p = 1; $p <= $params->modulo; $p++) {
             $params->id_modulo = $p;
@@ -143,6 +152,8 @@ class DefaultController extends Controller
                                 <th>Bottoming</th>
                                 <th>Packing</th>
                                 <th>Tiempo total</th>
+                                <th>Costo de Produccion</th>
+                                <th>Costo Final</th>
                             </tr>
                             </thead><tbody>";
             $tmp = 0;
@@ -150,6 +161,8 @@ class DefaultController extends Controller
             $number_rounds = 6;
             $total_time = 0;
             $total_pares = 0;
+            $total_production_cost = 0;
+            $total_production_cost_final = 0;
             foreach ($result as $key => $value) {
 
                 /* como hay multiples filas setiamos primeros los valores que van una sola vez */
@@ -184,8 +197,12 @@ class DefaultController extends Controller
                             $table .= "<td style=\"background-color:#F25E5E;font-weight: bold;\" >0</td>";
                         }
                     }
-                    $table .= "<td>" . round(($value->total_time / 60), 2) . " Horas</td>";
+                    $table .= "<td>" . round(($value->total_time > 60 ? ($value->total_time / 60) : $value->total_time), 2) . "" . ($value->total_time > 60 ? " Horas" : " Min") . "</td>";
+                    $table .= "<td>US$ " . number_format($value->production_cost) . "</td>";
+                    $table .= "<td>US$ " . number_format(($value->production_cost - (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0)))) . "</td>";
                     $total_time += $value->total_time;
+                    $total_production_cost += $value->production_cost;
+                    $total_production_cost_final += $value->production_cost - (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0));
                     $table .= " </tr> ";
                 }
             }
@@ -204,6 +221,8 @@ class DefaultController extends Controller
                         <td>" . round($value3->bottoming, 2) . " Min</td>
                         <td>" . round($value3->packing, 2) . " Min</td>
                         <td>" . round(($total_time / 60), 2) . " Horas</td>
+                        <td style='color:#008d4c;' >US$ " . number_format($total_production_cost) . "</td>
+                        <td style='color:" . ($total_production_cost == $total_production_cost_final ? '#008d4c' : '#F25E5E') . "' >US$ " . number_format($total_production_cost_final) . "</td>
                         </tr>
                     </tfoot>
                 </table>";
@@ -212,13 +231,13 @@ class DefaultController extends Controller
         }
         $html->table = $table;
         $html->eject = $params->max_ejecion;
-        return json_encode($html);
+        return $html;
 
     }
 
     private function randomKey($length)
     {
-        $pool = array_merge(range(0, 9), range('a', 'z'), range('A', 'Z'));
+        $pool = array_merge(range(0, 9));
         $key = '';
         for ($i = 0; $i < $length; $i++) {
             $key .= $pool[mt_rand(0, count($pool) - 1)];
@@ -401,4 +420,34 @@ class DefaultController extends Controller
         $html .= "</tr><tbody></table>";
         echo $html;
     }
+
+    public function getCustomer()
+    {
+        return $this->generateCombo($this->getModel()->getCustomer());
+    }
+
+    public function getProductStyle()
+    {
+        $data = \Factory::getInput('data');
+        $params = new \stdClass();
+        $params->product = $this->generateCombo($this->getModel()->getProductByCustomer($data));
+        $params->stock = $this->generateCombo($this->getModel()->getStock($data, 0));
+        return $params;
+    }
+
+    public function getStyle()
+    {
+        $data = \Factory::getInput('data');
+        return $this->generateCombo($this->getModel()->getStock($data['clientecmb'], $data['productocmb']));
+    }
+
+    public function generateCombo($data)
+    {
+        $html = " <option selected=\"selected\" value=\"0\">Select Option</option> ";
+        foreach ($data as $key) {
+            $html .= " <option value='$key->id_record'>$key->description</option> ";
+        }
+        return $html;
+    }
+
 }

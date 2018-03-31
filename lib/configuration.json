@@ -3,14 +3,14 @@
     "appInDeveloping"                               :       true,
     "instanceDatabase"                              :       "Mysqli",
     
-    "title"                                         :       "Simulacion",
+    "title"                                         :       "TeoriaDesicion",
     
     "server"                                        :       "http://localhost/",
     "defaultKeyRouting"                             :       "default",
     
     "dirModules"                                    :       "app",
     "dirLayouts"                                    :       "layouts",
-    "dirProject"                                    :       "simulacion/",
+    "dirProject"                                    :       "teoriaDesicion/",
     "dirLogs"                                       :       "logs",
     "dirMainFileJs"                                 :       "js",
     "dirMainFileCss"                                :       "css",

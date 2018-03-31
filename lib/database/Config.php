@@ -34,7 +34,7 @@ class Config
      * database connection
      * @var string
      */
-    protected $_DB_        = "db_simulacion";
+    protected $_DB_        = "db_teoria";
 
 	/**
      *
