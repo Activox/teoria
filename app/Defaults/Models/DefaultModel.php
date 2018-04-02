@@ -71,6 +71,7 @@ class DefaultModel extends ModelORM
           act.id_operacion,
           act.tiempo,
           (st.cost_production * ord.pares) production_cost,
+          (st.sell_cost * ord.pares) production_sell,
           ( select SUM(CASE WHEN act2.tiempo > 25 THEN 1 ELSE 0 END) from actividades act2 where act2.id_orden = ord.id_record ) count_time_extra,
             (
                 SELECT sum(act2.tiempo)
@@ -199,6 +200,52 @@ class DefaultModel extends ModelORM
             SELECT st.id_record, st.description FROM styles st
             inner join product prod on prod.id_record = st.product_id
             where (st.product_id = $productId or $productId = 0 ) AND (prod.customer_id = $customerId or $customerId = 0) 
+        ";
+        return $this->query($sql)->objectList();
+    }
+
+    public function getGananciaByProduct()
+    {
+        $sql = "
+        select
+          a.*,
+          (sell_production - a.cost_production)                                       ganancia_neta,
+          round(((sell_production - a.cost_production) / a.cost_production) * 100, 2) percent
+        from (
+               select
+                 prod.description,
+                 (st.cost_production * sum(ord.pares)) cost_production,
+                 (st.sell_cost * sum(ord.pares))       sell_production
+               FROM product prod
+                 INNER JOIN styles st ON st.product_id = prod.id_record
+                 INNER JOIN ordenes ord ON ord.style_id = st.id_record
+               group by 1
+             ) a
+        ORDER BY 4 DESC
+        LIMIT 10;
+        ";
+        return $this->query($sql)->objectList();
+    }
+
+    public function getTiempoByProduct()
+    {
+        $sql = "
+        SELECT
+          prod.description,
+          round((
+                  SELECT sum(act2.tiempo)
+                  FROM actividades act2
+                    inner join ordenes ord2 on ord2.id_record = act2.id_orden
+                    inner join styles st2 on st2.id_record = ord2.style_id
+                    inner join product prod2 on prod2.id_record = st2.product_id
+                  WHERE prod2.id_record = prod.id_record
+                ), 2) total_time
+        FROM product prod
+          INNER JOIN styles st ON st.product_id = prod.id_record
+          INNER JOIN ordenes ord ON ord.style_id = st.id_record
+        WHERE TRUE
+        GROUP BY 1
+        ORDER BY 2 DESC;
         ";
         return $this->query($sql)->objectList();
     }
