@@ -1,6 +1,8 @@
 $(function () {
     if ($("#problemInp").val() == 1) {
         request('reportProblem');
+    } else if ($("#earnInp").val() == 1) {
+        request('reportEarn');
     } else {
         request('reportProduccion');
     }
@@ -10,6 +12,8 @@ $(function () {
             $("#table").html(data);
             if ($request == 'reportProblem') {
                 title = 'Estadistica sobre problemas de produccion';
+            } else if ($request == 'reportEarn') {
+                title = 'Productos con mas retorno de inversion';
             } else {
                 title = 'Estadisticas sobre Produccion por Modulo';
             }

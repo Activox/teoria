@@ -122,7 +122,7 @@ class DefaultController extends Controller
                             }
                             /* si la temporada es invierno o verano aumentar el tiempo por la alta demanda. */
                             if (($params->temporada == 1 || $params->temporada == 3) || $operation_act->id_problem != 0) {
-                                if ( rand(1, 100) > 65 ){
+                                if (rand(1, 100) > 85) {
                                     $poisson = round(abs(1 / (rand(1, 10000) / 10000) * log((rand(1, 10000) / 10000))), 2);
                                     $operation_act->tiempo = $operation_act->tiempo + ($poisson * 10);
                                 }
@@ -153,7 +153,9 @@ class DefaultController extends Controller
                                 <th>Packing</th>
                                 <th>Tiempo total</th>
                                 <th>Costo de Produccion</th>
-                                <th>Costo Final</th>
+                                <th>Costo de Venta</th>
+                                <th>Ganancia Neta</th>
+                                <th>%</th>
                             </tr>
                             </thead><tbody>";
             $tmp = 0;
@@ -162,7 +164,7 @@ class DefaultController extends Controller
             $total_time = 0;
             $total_pares = 0;
             $total_production_cost = 0;
-            $total_production_cost_final = 0;
+            $total_production_sell = 0;
             foreach ($result as $key => $value) {
 
                 /* como hay multiples filas setiamos primeros los valores que van una sola vez */
@@ -198,11 +200,13 @@ class DefaultController extends Controller
                         }
                     }
                     $table .= "<td>" . round(($value->total_time > 60 ? ($value->total_time / 60) : $value->total_time), 2) . "" . ($value->total_time > 60 ? " Horas" : " Min") . "</td>";
-                    $table .= "<td>US$ " . number_format($value->production_cost) . "</td>";
-                    $table .= "<td>US$ " . number_format(($value->production_cost - (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0)))) . "</td>";
+                    $table .= "<td>US$ " . number_format(($value->production_cost + (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0)))) . "</td>";
+                    $table .= "<td>US$ " . number_format($value->production_sell) . "</td>";
+                    $table .= "<td>US$ " . number_format(($value->production_sell - ($value->production_cost + (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0))))) . "</td>";
+                    $table .= "<td> " . round((($value->production_sell - ($value->production_cost + (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0)))) / ($value->production_cost + (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0)))) * 100,2) . "%</td>";
                     $total_time += $value->total_time;
-                    $total_production_cost += $value->production_cost;
-                    $total_production_cost_final += $value->production_cost - (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0));
+                    $total_production_cost += $value->production_cost - (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0));
+                    $total_production_sell += $value->production_sell;
                     $table .= " </tr> ";
                 }
             }
@@ -221,8 +225,10 @@ class DefaultController extends Controller
                         <td>" . round($value3->bottoming, 2) . " Min</td>
                         <td>" . round($value3->packing, 2) . " Min</td>
                         <td>" . round(($total_time / 60), 2) . " Horas</td>
-                        <td style='color:#008d4c;' >US$ " . number_format($total_production_cost) . "</td>
-                        <td style='color:" . ($total_production_cost == $total_production_cost_final ? '#008d4c' : '#F25E5E') . "' >US$ " . number_format($total_production_cost_final) . "</td>
+                        <td >US$ " . number_format($total_production_cost) . "</td>
+                        <td style='color:" . ($total_production_cost < $total_production_sell ? '#008d4c' : '#F25E5E') . "' >US$ " . number_format($total_production_sell) . "</td>
+                        <td >US$ " . number_format(($total_production_sell - $total_production_cost)) . "</td>
+                        <td >" . round((($total_production_sell - $total_production_cost) / $total_production_cost) * 100,2) . "%</td>
                         </tr>
                     </tfoot>
                 </table>";
@@ -448,6 +454,14 @@ class DefaultController extends Controller
             $html .= " <option value='$key->id_record'>$key->description</option> ";
         }
         return $html;
+    }
+
+    public function getGananciaByProduct(){
+
+        $result = $this->getModel()->getGananciaByProduct();
+
+
+
     }
 
 }

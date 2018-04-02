@@ -85,7 +85,7 @@ $(function () {
                     $('#tableProblem').html(data.tableProblem);
                     let myData = [];
                     $.each($.parseJSON(data.chart), function (key, value) {
-                        myData.push([value.problema, (value.cant_problema / value.sum_problem)]);
+                        myData.push([value.problema, (value.cant_problema / value.sum_problem),value.problema]);
                     });
                     chart(myData);
                 } else {
