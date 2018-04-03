@@ -12,7 +12,7 @@ Route::getJs(array("scriptReport"), "Defaults", array(), FALSE);
     <!-- Default box -->
     <div class="box">
         <div class="box-header with-border">
-            <h3 class="box-title">Reporte de Porblemas de Produccion</h3>
+            <h3 class="box-title">Reporte Ganancias por Productos</h3>
         </div>
         <div class="box-body">
             <div class="row">

@@ -17,7 +17,8 @@ class Web
         //key (path request) => " Module's name '@' Class Name (without 'Controller' or 'Model') '.' Method to execute * View (the last parameter after '*' is optional, the '*' too)"
         "default" => "Defaults@Default.display*default",
         "reportProblem" => "Defaults@Default.display*reportProblem",
-        "reportProduccion" => "Defaults@Default.display*reportProduccion"
+        "reportProduccion" => "Defaults@Default.display*reportProduccion",
+        "reportEarning" => "Defaults@Default.display*reportEarn"
     );
     
 }

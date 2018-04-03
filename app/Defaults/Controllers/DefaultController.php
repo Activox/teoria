@@ -86,7 +86,7 @@ class DefaultController extends Controller
                 /* insertar la orden */
                 $orden = new \stdClass();
                 $orden->name = "" . $params->cliente == 1 ? "SPR" . $this->randomKey(7) : ($params->cliente == 2 ? "SEB" . $this->randomKey(7) : ($params->cliente == 3 ? "TMB" . $this->randomKey(7) : "QV" . $this->randomKey(7)));
-                $orden->pares = $data['parestxt'];
+                $orden->pares = rand(1, $data['parestxt']);
                 $orden->stock_id = $data['stockcmb'];
                 $id_orden = $this->getModel()->setOrden($orden);
                 $params->cancel = 0;
@@ -99,26 +99,26 @@ class DefaultController extends Controller
                         $operation_act->ejecucion = $params->max_ejecion;
                         $operation_act->id_operation = $value->id_record;
                         $operation_act->id_operation = $value->id_record;
+                        $operation_act->id_problem = 0;
                         $operation_act->tiempo = (rand(5, 35));
                         /* obtener todos los problemas que podria tener esa operacion */
                         $problems = $this->getModel()->getOperationsProblems($value->id_record);
                         $rand_problem = rand(0, count($problems));
                         /* verificar si la orden se cancela */
-                        $rand = rand(1, 100);
-                        if ($rand > 90) {
+                        if ((rand(1, 10000) / 10000) > 0.9700) {
                             $operation_act->id_problem = 24;
                             $params->cancel = 1;
                         } else {
                             /*buscar si en esta operacion hay un problema.*/
                             $count_problems = 1;
-                            foreach ($problems as $key) {
-                                if ($rand_problem == $count_problems) {
-                                    $operation_act->id_problem = $key->id_record;
-                                    break;
-                                } else {
-                                    $operation_act->id_problem = 0;
+                            if ((rand(1, 10000) / 10000) > 0.9500) {
+                                foreach ($problems as $key) {
+                                    if ($rand_problem == $count_problems) {
+                                        $operation_act->id_problem = $key->id_record;
+                                        break;
+                                    }
+                                    $count_problems++;
                                 }
-                                $count_problems++;
                             }
                             /* si la temporada es invierno o verano aumentar el tiempo por la alta demanda. */
                             if (($params->temporada == 1 || $params->temporada == 3) || $operation_act->id_problem != 0) {
@@ -200,10 +200,10 @@ class DefaultController extends Controller
                         }
                     }
                     $table .= "<td>" . round(($value->total_time > 60 ? ($value->total_time / 60) : $value->total_time), 2) . "" . ($value->total_time > 60 ? " Horas" : " Min") . "</td>";
-                    $table .= "<td>US$ " . number_format(($value->production_cost + (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0)))) . "</td>";
+                    $table .= "<td>US$ " . number_format(($value->production_cost + ($value->cost_production * ($value->count_time_extra > 0 ? $value->count_time_extra : 0)))) . "</td>";
                     $table .= "<td>US$ " . number_format($value->production_sell) . "</td>";
-                    $table .= "<td>US$ " . number_format(($value->production_sell - ($value->production_cost + (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0))))) . "</td>";
-                    $table .= "<td> " . round((($value->production_sell - ($value->production_cost + (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0)))) / ($value->production_cost + (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0)))) * 100,2) . "%</td>";
+                    $table .= "<td>US$ " . number_format(($value->production_sell - ($value->production_cost + ($value->cost_production * ($value->count_time_extra > 0 ? $value->count_time_extra : 0))))) . "</td>";
+                    $table .= "<td> " . round(((($value->production_sell - ($value->production_cost + ($value->cost_production * ($value->count_time_extra > 0 ? $value->count_time_extra : 0))))) / ($value->production_cost + ($value->production_cost * ($value->count_time_extra > 0 ? $value->count_time_extra : 0)))) * 100, 2) . "%</td>";
                     $total_time += $value->total_time;
                     $total_production_cost += $value->production_cost - (5 * ($value->count_time_extra > 0 ? $value->count_time_extra : 0));
                     $total_production_sell += $value->production_sell;
@@ -228,7 +228,7 @@ class DefaultController extends Controller
                         <td >US$ " . number_format($total_production_cost) . "</td>
                         <td style='color:" . ($total_production_cost < $total_production_sell ? '#008d4c' : '#F25E5E') . "' >US$ " . number_format($total_production_sell) . "</td>
                         <td >US$ " . number_format(($total_production_sell - $total_production_cost)) . "</td>
-                        <td >" . round((($total_production_sell - $total_production_cost) / $total_production_cost) * 100,2) . "%</td>
+                        <td >" . round((($total_production_sell - $total_production_cost) / $total_production_cost) * 100, 2) . "%</td>
                         </tr>
                     </tfoot>
                 </table>";
@@ -456,12 +456,68 @@ class DefaultController extends Controller
         return $html;
     }
 
-    public function getGananciaByProduct(){
-
+    public function getGananciaByProduct()
+    {
+        $data = new stdClass();
         $result = $this->getModel()->getGananciaByProduct();
-
-
-
+        $data->code = 400;
+        if (!empty($result)) {
+            $html = "
+                <table class=\"table table-bordered table-striped table-condensed\" >
+                <thead class=\"bg-light-blue\" >
+                    <tr>
+                        <th>#</th>
+                        <th>PRODUCT</th>
+                        <th>COSTO PRODUCCION</th>
+                        <th>COSTO VENTA</th>
+                        <th>PERDIDA</th>
+                        <th>GANANCIA</th>
+                        <th>% GANANCIA</th>
+                    </tr>
+                </thead>
+                <tbody>
+            ";
+            $count_row = 1;
+            $total_cost = 0;
+            $total_sell = 0;
+            $total_lose = 0;
+            $total_earning = 0;
+            foreach ($result as $key) {
+                $html .= " 
+                <tr>
+                    <td>" . $count_row++ . "</td>
+                    <td>" . $key->description . "</td>
+                    <td>USD$ " . number_format($key->cost_production, 2) . "</td>
+                    <td>USD$ " . number_format($key->sell_production, 2) . "</td>
+                    <td>USD$ " . number_format($key->lose_earn, 2) . "</td>
+                    <td>USD$ " . number_format($key->earning, 2) . "</td>
+                    <td>" . number_format($key->percent, 2) . "%</td>
+                </tr>
+               ";
+                $total_cost += $key->cost_production;
+                $total_sell += $key->sell_production;
+                $total_lose += $key->lose_earn;
+                $total_earning += $key->earning;
+            }
+            $html .= "</tbody>
+                <tfoot>
+                    <tr style=\"background-color: #dadada\" >
+                        <th colspan='2' ></th>
+                        <th>USD$ " . number_format($total_cost, 2) . "</th>
+                        <th>USD$ " . number_format($total_sell, 2) . "</th>
+                        <th>USD$ " . number_format($total_lose, 2) . "</th>
+                        <th>USD$ " . number_format($total_earning, 2) . "</th>
+                        <th> " . number_format(round(($total_earning / $total_cost) * 100, 2),2) . "%</th>
+                    </tr>
+                </tfoot>
+            </table>";
+            $data->table = $html;
+            $data->chart = json_encode($result);
+            $data->total_earning = $total_earning;
+        } else {
+            $data->code = 200;
+        }
+        return $data;
     }
 
 }

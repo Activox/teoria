@@ -70,9 +70,10 @@ class DefaultModel extends ModelORM
           ord.pares,
           act.id_operacion,
           act.tiempo,
+          st.cost_production, st.sell_cost,
           (st.cost_production * ord.pares) production_cost,
           (st.sell_cost * ord.pares) production_sell,
-          ( select SUM(CASE WHEN act2.tiempo > 25 THEN 1 ELSE 0 END) from actividades act2 where act2.id_orden = ord.id_record ) count_time_extra,
+          ( select SUM(CASE WHEN act2.id_problema > 0 THEN 1 ELSE 0 END) from actividades act2 where act2.id_orden = ord.id_record ) count_time_extra,
             (
                 SELECT sum(act2.tiempo)
                 FROM actividades act2
@@ -207,22 +208,38 @@ class DefaultModel extends ModelORM
     public function getGananciaByProduct()
     {
         $sql = "
-        select
-          a.*,
-          (sell_production - a.cost_production)                                       ganancia_neta,
-          round(((sell_production - a.cost_production) / a.cost_production) * 100, 2) percent
-        from (
-               select
-                 prod.description,
-                 (st.cost_production * sum(ord.pares)) cost_production,
-                 (st.sell_cost * sum(ord.pares))       sell_production
-               FROM product prod
-                 INNER JOIN styles st ON st.product_id = prod.id_record
-                 INNER JOIN ordenes ord ON ord.style_id = st.id_record
-               group by 1
-             ) a
-        ORDER BY 4 DESC
-        LIMIT 10;
+       SELECT
+          a.description,
+          a.cost_production,
+          a.sell_cost,
+          (a.sell_cost * a.pares)                                                                                                   sell_production,
+          ( (a.cost_production * a.pares) + ( a.cost_production * a.problem_count) )                                                cost_production,
+          a.problem_count                                                                                        problem_count,
+          ( a.cost_production * a.problem_count) lose_earn,
+          ((a.sell_cost * a.pares) - (a.cost_production * a.pares))  - (( a.cost_production * a.problem_count)) earning,
+          round((( ((a.sell_cost * a.pares) - (a.cost_production * a.pares))  -  ( a.cost_production * a.problem_count) ) / ((a.cost_production * a.pares) + ( a.cost_production * a.problem_count))) * 100, 2) percent
+       FROM (
+           SELECT
+             prod.description,
+             st.cost_production,
+             st.sell_cost,
+             (
+               SELECT SUM(CASE WHEN act.id_problema > 0 THEN 1 ELSE 0 END)
+               FROM actividades act
+                 inner join ordenes ord2 on ord2.id_record = act.id_orden
+                 inner join styles st2 on st2.id_record = ord2.style_id
+                 inner join product prod2 on prod2.id_record = st2.product_id
+               WHERE prod2.id_record = prod.id_record
+             )              problem_count,
+             sum(ord.pares) pares
+           FROM product prod
+             INNER JOIN styles st ON st.product_id = prod.id_record
+             INNER JOIN ordenes ord ON ord.style_id = st.id_record
+           GROUP BY 1, 2, 3
+       ) a
+       GROUP BY 1,2,3,4,5,6
+       ORDER BY 8 DESC
+       LIMIT 10;
         ";
         return $this->query($sql)->objectList();
     }

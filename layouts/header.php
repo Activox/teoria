@@ -162,6 +162,7 @@ $path = _HOST_ . _DIRECTORY_ . _DS_;
                     <ul class="treeview-menu">
                         <li><a href="reportProduccion"><i class="fa fa-circle-o"></i>Produccion</a></li>
                         <li><a href="reportProblem"><i class="fa fa-circle-o"></i>Problemas</a></li>
+                        <li><a href="reportEarning"><i class="fa fa-circle-o"></i>Ganancia</a></li>
                     </ul>
                 </li>
             </ul>

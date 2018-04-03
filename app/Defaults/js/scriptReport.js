@@ -8,19 +8,39 @@ $(function () {
     }
 
     function request($request) {
-        $.post('' + $request + '', {content: 'text'}, function (data) {
-            $("#table").html(data);
-            if ($request == 'reportProblem') {
-                title = 'Estadistica sobre problemas de produccion';
-            } else if ($request == 'reportEarn') {
-                title = 'Productos con mas retorno de inversion';
+        $.get('' + $request + '', {content: ($request == 'reportEarn' ? 'json' : 'text')}, function (data) {
+            if ($request == 'reportEarn') {
+                console.log(data);
+                if (data.code == 400) {
+                    $("#table").html(data.table);
+                    let title = "Productos con mas inversion de retorno";
+                    let myData = [];
+                    $.each($.parseJSON(data.chart), function (key, value) {
+                        myData.push([value.description, (value.earning / data.total_earning)]);
+                    });
+                    chartEarning(title, myData);
+                } else {
+                    $("#table").html(
+                        '<div class="callout callout-success text-align-center"> ' +
+                        '<h3 style="text-align: center;">' +
+                        '<i class="fa fa-info"></i> Ningun dato encontrado' +
+                        '</h3> ' +
+                        '</div>');
+                    $("#container").hide();
+                }
             } else {
-                title = 'Estadisticas sobre Produccion por Modulo';
+                $("#table").html(data);
+                if ($request == 'reportProblem') {
+                    title = 'Estadistica sobre problemas de produccion';
+                } else {
+                    title = 'Estadisticas sobre Produccion por Modulo';
+                }
+                chart(title);
             }
-            chart(title);
-        });
+        }, ($request == 'reportEarn' ? 'json' : 'text'));
     }
 
+    /* load chart reports */
     function chart(title) {
         Highcharts.chart('container', {
             data: {
@@ -44,6 +64,42 @@ $(function () {
                         this.point.y + ' ' + this.point.name.toLowerCase();
                 }
             }
+        });
+    }
+
+    function chartEarning(title, data) {
+        Highcharts.chart('container', {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: '' + title + ''
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    },
+                    showInLegend: true
+                }
+            },
+            series: [{
+                name: 'Brands',
+                colorByPoint: true,
+                data: data
+            }]
         });
     }
 });

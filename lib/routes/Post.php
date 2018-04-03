@@ -17,6 +17,7 @@ class Post
         "doProcess" => "Defaults@Default.doProcess",
         "getCustomer" => "Defaults@Default.getCustomer",
         "getProductStyle" => "Defaults@Default.getProductStyle",
+        "reportEarn" => "Defaults@Default.getGananciaByProduct",
         "getStyle" => "Defaults@Default.getStyle",
         "table" => "Defaults@Default.tableProblem",
         "reportProblem" => "Defaults@Default.getReportProblem",
