@@ -251,6 +251,406 @@ class DefaultController extends Controller
         return $key;
     }
 
+    public function getCustomer()
+    {
+        return $this->generateCombo($this->getModel()->getCustomer());
+    }
+
+    public function getProductStyle()
+    {
+        $data = \Factory::getInput('data');
+        $params = new \stdClass();
+        $params->product = $this->generateCombo($this->getModel()->getProductByCustomer($data));
+        $params->stock = $this->generateCombo($this->getModel()->getStock($data, 0));
+        return $params;
+    }
+
+    public function getStyle()
+    {
+        $data = \Factory::getInput('data');
+        return $this->generateCombo($this->getModel()->getStock($data['clientecmb'], $data['productocmb']));
+    }
+
+    public function generateCombo($data)
+    {
+        $html = " <option selected=\"selected\" value=\"0\">Select Option</option> ";
+        foreach ($data as $key) {
+            $html .= " <option value='$key->id_record'>$key->description</option> ";
+        }
+        return $html;
+    }
+
+    // EARNING ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    public function getReportGanancia()
+    {
+        $data = new stdClass();
+        $data->product = $this->getGananciaByProduct();
+        $data->module = $this->getGananciaByModule();
+        $data->style = $this->getGananciaBystyle();
+//        Factory::printDie($data);
+        return $data;
+    }
+
+    public function getGananciaByProduct()
+    {
+        $data = new stdClass();
+        $result = $this->getModel()->getGananciaByProduct();
+        $data->code = 400;
+        if (!empty($result)) {
+            $html = "
+                <table class=\"table table-bordered table-striped table-condensed\" style='text-align: center' >
+                <thead class=\"bg-light-blue\" >
+                    <tr>
+                        <th style='text-align: center' >#</th>
+                        <th style='text-align: center' >PRODUCT</th>
+                        <th style='text-align: center' >COSTO PRODUCCION</th>
+                        <th style='text-align: center' >COSTO VENTA</th>
+                        <th style='text-align: center' >PERDIDA</th>
+                        <th style='text-align: center' >GANANCIA</th>
+                        <th style='text-align: center' >% GANANCIA</th>
+                    </tr>
+                </thead>
+                <tbody>
+            ";
+            $count_row = 1;
+            $total_cost = 0;
+            $total_sell = 0;
+            $total_lose = 0;
+            $total_earning = 0;
+            foreach ($result as $key) {
+                $html .= " 
+                <tr>
+                    <td>" . $count_row++ . "</td>
+                    <td>" . $key->description . "</td>
+                    <td>USD$ " . number_format($key->cost_production_final, 2) . "</td>
+                    <td>USD$ " . number_format($key->sell_production, 2) . "</td>
+                    <td>USD$ " . number_format($key->lose_earn, 2) . "</td>
+                    <td>USD$ " . number_format($key->earning, 2) . "</td>
+                    <td>" . number_format($key->percent, 2) . "%</td>
+                </tr>
+               ";
+                $total_cost += $key->cost_production_final;
+                $total_sell += $key->sell_production;
+                $total_lose += $key->lose_earn;
+                $total_earning += $key->earning;
+            }
+            $html .= "</tbody>
+                <tfoot>
+                    <tr style=\"background-color: #dadada\" >
+                        <th style='text-align: center'  colspan='2' >TOTAL</th>
+                        <th style='text-align: center' >USD$ " . number_format($total_cost, 2) . "</th>
+                        <th style='text-align: center' >USD$ " . number_format($total_sell, 2) . "</th>
+                        <th style='text-align: center' >USD$ " . number_format($total_lose, 2) . "</th>
+                        <th style='text-align: center' >USD$ " . number_format($total_earning, 2) . "</th>
+                        <th style='text-align: center' > " . number_format(round(($total_earning / $total_cost) * 100, 2), 2) . "%</th>
+                    </tr>
+                </tfoot>
+            </table>";
+            $data->table = $html;
+            $data->chart = json_encode($result);
+            $data->total_earning = $total_earning;
+        } else {
+            $data->code = 200;
+        }
+        return $data;
+    }
+
+    public function getGananciaByModule()
+    {
+        $data = new stdClass();
+        $result = $this->getModel()->getGananciaByModule();
+        $data->code = 400;
+        if (!empty($result)) {
+            $html = "
+                <table class=\"table table-bordered table-striped table-condensed\" style='text-align: center' >
+                <thead class=\"bg-light-blue\" >
+                    <tr>
+                        <th style='text-align: center' >#</th>
+                        <th style='text-align: center' >MODULO</th>
+                        <th style='text-align: center' >COSTO PRODUCCION</th>
+                        <th style='text-align: center' >COSTO VENTA</th>
+                        <th style='text-align: center' >PERDIDA</th>
+                        <th style='text-align: center' >GANANCIA</th>
+                        <th style='text-align: center' >% GANANCIA</th>
+                    </tr>
+                </thead>
+                <tbody>
+            ";
+            $count_row = 1;
+            $total_cost = 0;
+            $total_sell = 0;
+            $total_lose = 0;
+            $total_earning = 0;
+            foreach ($result as $key) {
+                $html .= " 
+                <tr>
+                    <td>" . $count_row++ . "</td>
+                    <td>" . $key->description . "</td>
+                    <td>USD$ " . number_format($key->cost_production_final, 2) . "</td>
+                    <td>USD$ " . number_format($key->sell_production, 2) . "</td>
+                    <td>USD$ " . number_format($key->lose_earn, 2) . "</td>
+                    <td>USD$ " . number_format($key->earning, 2) . "</td>
+                    <td>" . number_format($key->percent, 2) . "%</td>
+                </tr>
+               ";
+                $total_cost += $key->cost_production_final;
+                $total_sell += $key->sell_production;
+                $total_lose += $key->lose_earn;
+                $total_earning += $key->earning;
+            }
+            $html .= "</tbody>
+                <tfoot>
+                    <tr style=\"background-color: #dadada\" >
+                        <th style='text-align: center'  colspan='2' >TOTAL</th>
+                        <th style='text-align: center' >USD$ " . number_format($total_cost, 2) . "</th>
+                        <th style='text-align: center' >USD$ " . number_format($total_sell, 2) . "</th>
+                        <th style='text-align: center' >USD$ " . number_format($total_lose, 2) . "</th>
+                        <th style='text-align: center' >USD$ " . number_format($total_earning, 2) . "</th>
+                        <th style='text-align: center' > " . number_format(round(($total_earning / $total_cost) * 100, 2), 2) . "%</th>
+                    </tr>
+                </tfoot>
+            </table>";
+            $data->table = $html;
+            $data->chart = json_encode($result);
+            $data->total_earning = $total_earning;
+        } else {
+            $data->code = 200;
+        }
+        return $data;
+    }
+
+    public function getGananciaByStyle()
+    {
+        $data = new stdClass();
+        $result = $this->getModel()->getGananciaByStyle();
+        $data->code = 400;
+        if (!empty($result)) {
+            $html = "
+                <table class=\"table table-bordered table-striped table-condensed\" style='text-align: center' >
+                <thead class=\"bg-light-blue\" >
+                    <tr>
+                        <th style='text-align: center' >#</th>
+                        <th style='text-align: center' >ESTILO</th>
+                        <th style='text-align: center' >COSTO PRODUCCION</th>
+                        <th style='text-align: center' >COSTO VENTA</th>
+                        <th style='text-align: center' >PERDIDA</th>
+                        <th style='text-align: center' >GANANCIA</th>
+                        <th style='text-align: center' >% GANANCIA</th>
+                    </tr>
+                </thead>
+                <tbody>
+            ";
+            $count_row = 1;
+            $total_cost = 0;
+            $total_sell = 0;
+            $total_lose = 0;
+            $total_earning = 0;
+            foreach ($result as $key) {
+                $html .= " 
+                <tr>
+                    <td>" . $count_row++ . "</td>
+                    <td>" . $key->description . "</td>
+                    <td>USD$ " . number_format($key->cost_production_final, 2) . "</td>
+                    <td>USD$ " . number_format($key->sell_production, 2) . "</td>
+                    <td>USD$ " . number_format($key->lose_earn, 2) . "</td>
+                    <td>USD$ " . number_format($key->earning, 2) . "</td>
+                    <td>" . number_format($key->percent, 2) . "%</td>
+                </tr>
+               ";
+                $total_cost += $key->cost_production_final;
+                $total_sell += $key->sell_production;
+                $total_lose += $key->lose_earn;
+                $total_earning += $key->earning;
+            }
+            $html .= "</tbody>
+                <tfoot>
+                    <tr style=\"background-color: #dadada\" >
+                        <th style='text-align: center'  colspan='2' >TOTAL</th>
+                        <th style='text-align: center' >USD$ " . number_format($total_cost, 2) . "</th>
+                        <th style='text-align: center' >USD$ " . number_format($total_sell, 2) . "</th>
+                        <th style='text-align: center' >USD$ " . number_format($total_lose, 2) . "</th>
+                        <th style='text-align: center' >USD$ " . number_format($total_earning, 2) . "</th>
+                        <th style='text-align: center' > " . number_format(round(($total_earning / $total_cost) * 100, 2), 2) . "%</th>
+                    </tr>
+                </tfoot>
+            </table>";
+            $data->table = $html;
+            $data->chart = json_encode($result);
+            $data->total_earning = $total_earning;
+        } else {
+            $data->code = 200;
+        }
+
+        return $data;
+    }
+
+    // TIME ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    public function getReportTime()
+    {
+        $data = new stdClass();
+        $data->product = $this->getTimeByProduct();
+        $data->style = $this->getTimeByStyle();
+        $data->module = $this->getTimeByModule();
+        return $data;
+    }
+
+    public function getTimeByProduct()
+    {
+        $data = new stdClass();
+        $result = $this->getModel()->getTiempoByProduct();
+        $data->code = 400;
+        if (!empty($result)) {
+            $html = "
+                <table class=\"table table-bordered table-striped table-condensed\" style='text-align: center' >
+                <thead class=\"bg-light-blue\" >
+                    <tr>
+                        <th style='text-align: center' >#</th>
+                        <th style='text-align: center' >PRODUCTO</th>
+                        <th style='text-align: center' >TIEMPO PROMEDIO</th>
+                        <th style='text-align: center' >TIEMPO TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+            ";
+            $count_row = 1;
+            $total_promedio = 0;
+            $total_time = 0;
+            foreach ($result as $key) {
+                $html .= " 
+                <tr>
+                    <td>" . $count_row++ . "</td>
+                    <td>" . $key->product_name . "</td>
+                    <td> " . number_format($key->product_promedio, 2) . " Min </td>
+                    <td> " . number_format($key->product_time, 2) . " Horas </td>
+                </tr>
+               ";
+                $total_promedio += $key->product_promedio;
+                $total_time += $key->product_time;
+            }
+            $html .= "</tbody>
+                <tfoot>
+                    <tr style=\"background-color: #dadada\" >
+                        <th></th>
+                        <th style='text-align: center' >TOTAL</th>
+                        <th style='text-align: center' > " . number_format(($total_promedio / 60), 2) . " Horas </th>
+                        <th style='text-align: center' > " . number_format($total_time, 2) . " Horas </th>
+                    </tr>
+                </tfoot>
+            </table>";
+            $data->table = $html;
+            $data->chart = json_encode($result);
+            $data->total_time = $total_time;
+        } else {
+            $data->code = 200;
+        }
+        return $data;
+    }
+
+    public function getTimeByStyle()
+    {
+        $data = new stdClass();
+        $result = $this->getModel()->getTiempoByStyle();
+        $data->code = 400;
+        if (!empty($result)) {
+            $html = "
+                <table class=\"table table-bordered table-striped table-condensed\" style='text-align: center' >
+                <thead class=\"bg-light-blue\" >
+                    <tr>
+                        <th style='text-align: center' >#</th>
+                        <th style='text-align: center' >ESTILO</th>
+                        <th style='text-align: center' >TIEMPO PROMEDIO</th>
+                        <th style='text-align: center' >TIEMPO TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+            ";
+            $count_row = 1;
+            $total_promedio = 0;
+            $total_time = 0;
+            foreach ($result as $key) {
+                $html .= " 
+                <tr>
+                    <td>" . $count_row++ . "</td>
+                    <td>" . $key->style_name . "</td>
+                    <td>" . number_format(($key->style_promedio / 60) * 100, 2) . " Min</td>
+                    <td>" . number_format($key->style_time, 2) . " Horas </td>
+                </tr>
+               ";
+                $total_promedio += ($key->style_promedio / 60) * 100;
+                $total_time += $key->style_time;
+            }
+            $html .= "</tbody>
+                <tfoot>
+                    <tr style=\"background-color: #dadada\" >
+                        <th></th>
+                        <th style='text-align: center'> TOTAL </th>
+                        <th style='text-align: center' >" . number_format(($total_promedio / 60), 2) . " Horas </th>
+                        <th style='text-align: center' >" . number_format($total_time, 2) . " Horas </th>
+                    </tr>
+                </tfoot>
+            </table>";
+            $data->table = $html;
+            $data->chart = json_encode($result);
+            $data->total_time = $total_time;
+        } else {
+            $data->code = 200;
+        }
+        return $data;
+    }
+
+    public function getTimeByModule()
+    {
+        $data = new stdClass();
+        $result = $this->getModel()->getTiempoByModule();
+        $data->code = 400;
+        if (!empty($result)) {
+            $html = "
+                <table class=\"table table-bordered table-striped table-condensed\" style='text-align: center' >
+                <thead class=\"bg-light-blue\" >
+                    <tr>
+                        <th style='text-align: center' >#</th>
+                        <th style='text-align: center' >MODULO</th>
+                        <th style='text-align: center' >TIEMPO PROMEDIO</th>
+                        <th style='text-align: center' >TIEMPO TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+            ";
+            $count_row = 1;
+            $total_promedio = 0;
+            $total_time = 0;
+            foreach ($result as $key) {
+                $html .= " 
+                <tr>
+                    <td>" . $count_row++ . "</td>
+                    <td>" . $key->module . "</td>
+                    <td>" . number_format(($key->module_promedio / 60) * 100, 2) . " Min </td>
+                    <td>" . number_format($key->modulo_time, 2) . " Horas </td>
+                </tr>
+               ";
+                $total_promedio += ($key->module_promedio / 60) * 100;
+                $total_time += $key->modulo_time;
+            }
+            $html .= "</tbody>
+                <tfoot>
+                    <tr style=\"background-color: #dadada;text-align: center;\" >
+                        <th></th>
+                        <th style='text-align: center' >TOTAL</th>
+                        <th style='text-align: center' >" . number_format(($total_promedio / 60), 2) . " Horas</th>
+                        <th style='text-align: center' >" . number_format($total_time, 2) . " Horas</th>
+                    </tr>
+                </tfoot>
+            </table>";
+            $data->table = $html;
+            $data->chart = json_encode($result);
+            $data->total_time = $total_time;
+        } else {
+            $data->code = 200;
+        }
+        return $data;
+    }
+
+    // PROBLEM ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     public function tableProblem()
     {
         $html = new stdClass();
@@ -334,16 +734,26 @@ class DefaultController extends Controller
 
     public function getReportProblem()
     {
+        $data = new stdClass();
+        $data->qty = $this->getReportProblemQty();
+        $data->product = $this->getProblemByProduct();
+        $data->style = $this->getProblemByStyle();
+        $data->module = $this->getProblemByModule();
+        return $data;
+    }
+
+    public function getReportProblemQty()
+    {
 
         $html = '';
         $result = $this->getModel()->getTotalProblems();
-        $html .= '  <table class="table table-bordered table-striped table-condensed" >
+        $html .= '  <table class="table table-bordered table-striped table-condensed" style="text-align: center" >
                         <thead class="bg-light-blue-active">
                         <tr>
-                                <th>#</th>
-                                <th>Problema</th>
-                                <th>Qty</th>
-                                <th>Solucion</th>
+                                <th style="text-align: center" >#</th>
+                                <th style="text-align: center" >Problema</th>
+                                <th style="text-align: center" >Qty</th>
+                                <th style="text-align: center" >Solucion</th>
                             </tr>
                             </thead><tbody> ';
         $count_rows = 1;
@@ -360,14 +770,14 @@ class DefaultController extends Controller
         $html .= "<tbody>
                 <tfoot>
                     <tr style='background-color: #dadada;' >
-                        <th colspan='2' ></th>
-                        <th > " . number_format($total_problems) . " </th>
-                        <th ></th>
+                        <th style=\"text-align: center\" colspan='2' >TOTAL</th>
+                        <th style=\"text-align: center\" > " . number_format($total_problems) . " </th>
+                        <th style=\"text-align: center\" ></th>
                     </tr>
                 </tfoot>
                 </table>";
 
-        $html .= '  <table class="table table-bordered table-striped table-condensed" id="datatable" style="display: none" >
+        $html .= '  <table class="table table-bordered table-striped table-condensed" id="datatableQty" style="display: none" >
                         <thead class="bg-light-blue-active">
                             <tr><th></th>';
         foreach ($result as $key) {
@@ -378,20 +788,19 @@ class DefaultController extends Controller
             $html .= " <td>" . $key->cant_problema . "</td> ";
         }
         $html .= "</tr><tbody></table>";
-        echo $html;
+        return $html;
     }
 
-    public function getReportProduccion()
+    public function getProblemByProduct()
     {
-
         $html = '';
-        $result = $this->getModel()->getTotalProduction();
-        $html .= '  <table class="table table-bordered table-striped table-condensed" >
+        $result = $this->getModel()->getProblemByProduct();
+        $html .= '  <table class="table table-bordered table-striped table-condensed" style="text-align: center" >
                         <thead class="bg-light-blue-active">
                         <tr>
-                                <th>#</th>
-                                <th>Modulo</th>
-                                <th>Qty Pares</th>
+                                <th style="text-align: center" style=\"text-align: center\" >#</th>
+                                <th style="text-align: center" style=\"text-align: center\" >PRODUCTO</th>
+                                <th style="text-align: center" style=\"text-align: center\" >QTY</th>
                             </tr>
                             </thead><tbody> ';
         $count_rows = 1;
@@ -399,125 +808,361 @@ class DefaultController extends Controller
         foreach ($result as $key) {
             $html .= "<tr>
             <td>" . $count_rows++ . "</td>
-            <td>" . $key->modulo . "</td>
-            <td>" . number_format($key->pares) . "</td>
+            <td>" . $key->product_name . "</td>
+            <td>" . number_format($key->count_problem) . "</td>
             </tr>";
-            $total_problems += $key->pares;
+            $total_problems += $key->count_problem;
         }
         $html .= "<tbody>
                 <tfoot>
                     <tr style='background-color: #dadada;' >
-                        <th colspan='2' ></th>
-                        <th > " . number_format($total_problems) . " </th>
+                        <th style=\"text-align: center\" colspan='2' >TOTAL</th>
+                        <th style=\"text-align: center\" > " . number_format($total_problems) . " </th>
                     </tr>
                 </tfoot>
                 </table>";
 
-        $html .= '  <table class="table table-bordered table-striped table-condensed" id="datatable" style="display: none" >
+        $html .= '  <table class="table table-bordered table-striped table-condensed" id="datatableProduct" style="display: none" >
                         <thead class="bg-light-blue-active">
                             <tr><th></th>';
         foreach ($result as $key) {
-            $html .= '<th>' . $key->modulo . '</th>';
+            $html .= '<th>' . $key->product_name . '</th>';
         }
-        $html .= '</tr></thead><tbody><tr><td>QTY Pares</td> ';
+        $html .= '</tr></thead><tbody><tr><td>QTY</td> ';
         foreach ($result as $key) {
-            $html .= " <td>" . $key->pares . "</td> ";
+            $html .= " <td>" . $key->count_problem . "</td> ";
         }
         $html .= "</tr><tbody></table>";
-        echo $html;
-    }
-
-    public function getCustomer()
-    {
-        return $this->generateCombo($this->getModel()->getCustomer());
-    }
-
-    public function getProductStyle()
-    {
-        $data = \Factory::getInput('data');
-        $params = new \stdClass();
-        $params->product = $this->generateCombo($this->getModel()->getProductByCustomer($data));
-        $params->stock = $this->generateCombo($this->getModel()->getStock($data, 0));
-        return $params;
-    }
-
-    public function getStyle()
-    {
-        $data = \Factory::getInput('data');
-        return $this->generateCombo($this->getModel()->getStock($data['clientecmb'], $data['productocmb']));
-    }
-
-    public function generateCombo($data)
-    {
-        $html = " <option selected=\"selected\" value=\"0\">Select Option</option> ";
-        foreach ($data as $key) {
-            $html .= " <option value='$key->id_record'>$key->description</option> ";
-        }
         return $html;
     }
 
-    public function getGananciaByProduct()
+    public function getProblemByStyle()
     {
-        $data = new stdClass();
-        $result = $this->getModel()->getGananciaByProduct();
-        $data->code = 400;
-        if (!empty($result)) {
-            $html = "
-                <table class=\"table table-bordered table-striped table-condensed\" >
-                <thead class=\"bg-light-blue\" >
-                    <tr>
-                        <th>#</th>
-                        <th>PRODUCT</th>
-                        <th>COSTO PRODUCCION</th>
-                        <th>COSTO VENTA</th>
-                        <th>PERDIDA</th>
-                        <th>GANANCIA</th>
-                        <th>% GANANCIA</th>
-                    </tr>
-                </thead>
-                <tbody>
-            ";
-            $count_row = 1;
-            $total_cost = 0;
-            $total_sell = 0;
-            $total_lose = 0;
-            $total_earning = 0;
-            foreach ($result as $key) {
-                $html .= " 
-                <tr>
-                    <td>" . $count_row++ . "</td>
-                    <td>" . $key->description . "</td>
-                    <td>USD$ " . number_format($key->cost_production, 2) . "</td>
-                    <td>USD$ " . number_format($key->sell_production, 2) . "</td>
-                    <td>USD$ " . number_format($key->lose_earn, 2) . "</td>
-                    <td>USD$ " . number_format($key->earning, 2) . "</td>
-                    <td>" . number_format($key->percent, 2) . "%</td>
-                </tr>
-               ";
-                $total_cost += $key->cost_production;
-                $total_sell += $key->sell_production;
-                $total_lose += $key->lose_earn;
-                $total_earning += $key->earning;
-            }
-            $html .= "</tbody>
+        $html = '';
+        $result = $this->getModel()->getProblemByStyle();
+        $html .= '  <table class="table table-bordered table-striped table-condensed" style="text-align: center" >
+                        <thead class="bg-light-blue-active">
+                        <tr>
+                                <th style="text-align: center" >#</th>
+                                <th style="text-align: center" >ESTILO</th>
+                                <th style="text-align: center" >QTY</th>
+                            </tr>
+                            </thead><tbody> ';
+        $count_rows = 1;
+        $total_problems = 0;
+        foreach ($result as $key) {
+            $html .= "<tr>
+            <td>" . $count_rows++ . "</td>
+            <td>" . $key->style_name . "</td>
+            <td>" . number_format($key->count_problem) . "</td>
+            </tr>";
+            $total_problems += $key->count_problem;
+        }
+        $html .= "<tbody>
                 <tfoot>
-                    <tr style=\"background-color: #dadada\" >
-                        <th colspan='2' ></th>
-                        <th>USD$ " . number_format($total_cost, 2) . "</th>
-                        <th>USD$ " . number_format($total_sell, 2) . "</th>
-                        <th>USD$ " . number_format($total_lose, 2) . "</th>
-                        <th>USD$ " . number_format($total_earning, 2) . "</th>
-                        <th> " . number_format(round(($total_earning / $total_cost) * 100, 2),2) . "%</th>
+                    <tr style='background-color: #dadada;' >
+                        <th style=\"text-align: center\" colspan='2' >TOTAL</th>
+                        <th style=\"text-align: center\" > " . number_format($total_problems) . " </th>
                     </tr>
                 </tfoot>
-            </table>";
-            $data->table = $html;
-            $data->chart = json_encode($result);
-            $data->total_earning = $total_earning;
-        } else {
-            $data->code = 200;
+                </table>";
+
+        $html .= '  <table class="table table-bordered table-striped table-condensed" id="datatableStyle" style="display: none" >
+                        <thead class="bg-light-blue-active">
+                            <tr><th></th>';
+        foreach ($result as $key) {
+            $html .= '<th>' . $key->style_name . '</th>';
         }
+        $html .= '</tr></thead><tbody><tr><td>QTY</td> ';
+        foreach ($result as $key) {
+            $html .= " <td>" . $key->count_problem . "</td> ";
+        }
+        $html .= "</tr><tbody></table>";
+        return $html;
+    }
+
+    public function getProblemByModule()
+    {
+        $html = '';
+        $result = $this->getModel()->getProblemByModel();
+        $html .= '  <table class="table table-bordered table-striped table-condensed" style="text-align: center"   >
+                        <thead class="bg-light-blue-active">
+                        <tr>
+                                <th style="text-align: center" >#</th>
+                                <th style="text-align: center" >MODULO</th>
+                                <th style="text-align: center" >QTY</th>
+                            </tr>
+                            </thead><tbody> ';
+        $count_rows = 1;
+        $total_problems = 0;
+        foreach ($result as $key) {
+            $html .= "<tr>
+            <td>" . $count_rows++ . "</td>
+            <td>" . $key->module_name . "</td>
+            <td>" . number_format($key->count_problem) . "</td>
+            </tr>";
+            $total_problems += $key->count_problem;
+        }
+        $html .= "<tbody>
+                <tfoot>
+                    <tr style='background-color: #dadada;' >
+                        <th style=\"text-align: center\" colspan='2' >TOTAL</th>
+                        <th style=\"text-align: center\" > " . number_format($total_problems) . " </th>
+                    </tr>
+                </tfoot>
+                </table>";
+
+        $html .= '  <table class="table table-bordered table-striped table-condensed" id="datatableModule" style="display: none" >
+                        <thead class="bg-light-blue-active">
+                            <tr><th></th>';
+        foreach ($result as $key) {
+            $html .= '<th>' . $key->module_name . '</th>';
+        }
+        $html .= '</tr></thead><tbody><tr><td>QTY</td> ';
+        foreach ($result as $key) {
+            $html .= " <td>" . $key->count_problem . "</td> ";
+        }
+        $html .= "</tr><tbody></table>";
+        return $html;
+    }
+
+    // PRODUCTION ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    public function getReportProduction()
+    {
+        $data = new stdClass();
+        $data->product = $this->getProductionByProduct();
+        $data->style = $this->getProductionByStyle();
+        $data->module = $this->getReportProduccion();
         return $data;
+    }
+
+    public function getReportProduccion()
+    {
+
+        $html = '';
+        $result = $this->getModel()->getTotalProduction();
+        $html .= '  <table class="table table-bordered table-striped table-condensed" style="text-align: center" >
+                        <thead class="bg-light-blue-active">
+                        <tr>
+                                <th style="text-align: center" >#</th>
+                                <th style="text-align: center" >MODULO</th>
+                                <th style="text-align: center" >PLANIFICACION</th>
+                                <th style="text-align: center" >CORTE</th>
+                                <th style="text-align: center" >HANDSEWING</th>
+                                <th style="text-align: center" >HORNO</th>
+                                <th style="text-align: center" >BOTTOMING</th>
+                                <th style="text-align: center" >PACKING</th>
+                                <th style="text-align: center" >TOTAL QTY</th>
+                            </tr>
+                            </thead><tbody> ';
+        $count_rows = 1;
+        $total_planning = 0;
+        $total_cutting = 0;
+        $total_handsewing = 0;
+        $total_horno = 0;
+        $total_bottoming = 0;
+        $total_packing = 0;
+        $total_qty = 0;
+        foreach ($result as $key) {
+            $html .= "<tr>
+                <td>" . $count_rows++ . "</td>
+                <td>" . $key->description . "</td>
+                <td>" . number_format($key->planificacion, 2) . "</td>
+                <td>" . number_format($key->cutting, 2) . "</td>
+                <td>" . number_format($key->handsewing, 2) . "</td>
+                <td>" . number_format($key->horno, 2) . "</td>
+                <td>" . number_format($key->bottoming, 2) . "</td>
+                <td>" . number_format($key->packing, 2) . "</td>
+                <td>" . number_format($key->total, 2) . "</td>
+            </tr>";
+            $total_planning += $key->planificacion;
+            $total_cutting += $key->cutting;
+            $total_handsewing += $key->handsewing;
+            $total_horno += $key->horno;
+            $total_bottoming += $key->bottoming;
+            $total_packing += $key->packing;
+            $total_qty += $key->total;
+        }
+        $html .= "<tbody>
+                <tfoot>
+                    <tr style='background-color: #dadada;' >
+                        <th style=\"text-align: center\" colspan='2' >TOTAL</th>
+                        <th style=\"text-align: center\" > " . number_format($total_planning, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_cutting, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_handsewing, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_horno, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_bottoming, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_packing, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_qty, 2) . " </th>
+                    </tr>
+                </tfoot>
+                </table>";
+
+        $html .= '  <table class="table table-bordered table-striped table-condensed" id="datatableModule" style="display: none" >
+                        <thead class="bg-light-blue-active">
+                            <tr><th></th>';
+        foreach ($result as $key) {
+            $html .= '<th>' . $key->description . '</th>';
+        }
+        $html .= '</tr></thead><tbody><tr><td>QTY Pares</td> ';
+        foreach ($result as $key) {
+            $html .= " <td>" . $key->total . "</td> ";
+        }
+        $html .= "</tr><tbody></table>";
+        return $html;
+    }
+
+    public function getProductionByProduct()
+    {
+
+        $html = '';
+        $result = $this->getModel()->getProductionByProduct();
+        $html .= '  <table class="table table-bordered table-striped table-condensed" style="text-align: center" >
+                        <thead class="bg-light-blue-active">
+                        <tr>
+                                <th style="text-align: center" >#</th>
+                                <th style="text-align: center" >PRODUCTO</th>
+                                <th style="text-align: center" >PLANIFICACION</th>
+                                <th style="text-align: center" >CORTE</th>
+                                <th style="text-align: center" >HANDSEWING</th>
+                                <th style="text-align: center" >HORNO</th>
+                                <th style="text-align: center" >BOTTOMING</th>
+                                <th style="text-align: center" >PACKING</th>
+                                <th style="text-align: center" >TOTAL QTY</th>
+                            </tr>
+                            </thead><tbody> ';
+        $count_rows = 1;
+        $total_planning = 0;
+        $total_cutting = 0;
+        $total_handsewing = 0;
+        $total_horno = 0;
+        $total_bottoming = 0;
+        $total_packing = 0;
+        $total_qty = 0;
+        foreach ($result as $key) {
+            $html .= "<tr>
+                <td>" . $count_rows++ . "</td>
+                <td>" . $key->description . "</td>
+                <td>" . number_format($key->planificacion, 2) . "</td>
+                <td>" . number_format($key->cutting, 2) . "</td>
+                <td>" . number_format($key->handsewing, 2) . "</td>
+                <td>" . number_format($key->horno, 2) . "</td>
+                <td>" . number_format($key->bottoming, 2) . "</td>
+                <td>" . number_format($key->packing, 2) . "</td>
+                <td>" . number_format($key->total, 2) . "</td>
+            </tr>";
+            $total_planning += $key->planificacion;
+            $total_cutting += $key->cutting;
+            $total_handsewing += $key->handsewing;
+            $total_horno += $key->horno;
+            $total_bottoming += $key->bottoming;
+            $total_packing += $key->packing;
+            $total_qty += $key->total;
+        }
+        $html .= "<tbody>
+                <tfoot>
+                    <tr style='background-color: #dadada;' >
+                        <th style=\"text-align: center\" colspan='2' >TOTAL</th>
+                        <th style=\"text-align: center\" > " . number_format($total_planning, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_cutting, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_handsewing, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_horno, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_bottoming, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_packing, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_qty, 2) . " </th>
+                    </tr>
+                </tfoot>
+                </table>";
+
+        $html .= '  <table class="table table-bordered table-striped table-condensed" id="datatableProduct" style="display: none" >
+                        <thead class="bg-light-blue-active">
+                            <tr><th></th>';
+        foreach ($result as $key) {
+            $html .= '<th>' . $key->description . '</th>';
+        }
+        $html .= '</tr></thead><tbody><tr><td>QTY Pares</td> ';
+        foreach ($result as $key) {
+            $html .= " <td>" . $key->total . "</td> ";
+        }
+        $html .= "</tr><tbody></table>";
+        return $html;
+    }
+
+    public function getProductionByStyle()
+    {
+
+        $html = '';
+        $result = $this->getModel()->getProductionByStyle();
+        $html .= '  <table class="table table-bordered table-striped table-condensed" style="text-align: center" >
+                        <thead class="bg-light-blue-active">
+                        <tr>
+                                <th style="text-align: center" >#</th>
+                                <th style="text-align: center" >PRODUCTO</th>
+                                <th style="text-align: center" >PLANIFICACION</th>
+                                <th style="text-align: center" >CORTE</th>
+                                <th style="text-align: center" >HANDSEWING</th>
+                                <th style="text-align: center" >HORNO</th>
+                                <th style="text-align: center" >BOTTOMING</th>
+                                <th style="text-align: center" >PACKING</th>
+                                <th style="text-align: center" >TOTAL QTY</th>
+                            </tr>
+                            </thead><tbody> ';
+        $count_rows = 1;
+        $total_planning = 0;
+        $total_cutting = 0;
+        $total_costura = 0;
+        $total_handsewing = 0;
+        $total_horno = 0;
+        $total_bottoming = 0;
+        $total_packing = 0;
+        $total_qty = 0;
+        foreach ($result as $key) {
+            $html .= "<tr>
+                <td>" . $count_rows++ . "</td>
+                <td>" . $key->description . "</td>
+                <td>" . number_format($key->planificacion, 2) . "</td>
+                <td>" . number_format($key->cutting, 2) . "</td>
+                <td>" . number_format($key->handsewing, 2) . "</td>
+                <td>" . number_format($key->horno, 2) . "</td>
+                <td>" . number_format($key->bottoming, 2) . "</td>
+                <td>" . number_format($key->packing, 2) . "</td>
+                <td>" . number_format($key->total, 2) . "</td>
+            </tr>";
+            $total_planning += $key->planificacion;
+            $total_cutting += $key->cutting;
+            $total_handsewing += $key->handsewing;
+            $total_horno += $key->horno;
+            $total_bottoming += $key->bottoming;
+            $total_packing += $key->packing;
+            $total_qty += $key->total;
+        }
+        $html .= "<tbody>
+                <tfoot>
+                    <tr style='background-color: #dadada;' >
+                        <th style=\"text-align: center\" colspan='2' >TOTAL</th>
+                        <th style=\"text-align: center\" > " . number_format($total_planning, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_cutting, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_handsewing, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_horno, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_bottoming, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_packing, 2) . " </th>
+                        <th style=\"text-align: center\" > " . number_format($total_qty, 2) . " </th>
+                    </tr>
+                </tfoot>
+                </table>";
+
+        $html .= '  <table class="table table-bordered table-striped table-condensed" id="datatableStyle" style="display: none" >
+                        <thead class="bg-light-blue-active">
+                            <tr><th></th>';
+        foreach ($result as $key) {
+            $html .= '<th>' . $key->description . '</th>';
+        }
+        $html .= '</tr></thead><tbody><tr><td>QTY Pares</td> ';
+        foreach ($result as $key) {
+            $html .= " <td>" . $key->total . "</td> ";
+        }
+        $html .= "</tr><tbody></table>";
+        return $html;
     }
 
 }

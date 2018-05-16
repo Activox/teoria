@@ -15,7 +15,8 @@ class Layout {
      */
     public static $_layouts =   array(
         //web route key => "header" => layout header, "footer" => layout footer
-        "default" => [ "header" => "", "footer" => "" ]
+        "default" => [ "header" => "", "footer" => "" ],
+        "test" => [ "header" => "headerRaw", "footer" => "footerRaw" ]
     );
     
 }

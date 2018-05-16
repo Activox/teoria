@@ -1,18 +1,18 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: paul9
- * Date: 17/12/2017
- * Time: 4:15 PM
+ * User: pottenwalder
+ * Date: 4/9/2018
+ * Time: 11:36 AM
  */
-Route::getJs(array("earningScript"), "Defaults", array(), FALSE);
+Route::getJs(array("timeScript"), "Defaults", array(), FALSE);
 ?>
 <input type="hidden" id="earnInp" value="1">
 <section class="content">
     <!-- Default box -->
     <div class="box">
         <div class="box-header with-border">
-            <h3 class="box-title">Reporte Ganancias</h3>
+            <h3 class="box-title">Reporte Tiempo</h3>
         </div>
         <div class="box-body">
             <div class="nav-tabs-custom">

@@ -1,13 +1,12 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: paul9
- * Date: 17/12/2017
- * Time: 4:15 PM
+ * User: pottenwalder
+ * Date: 4/9/2018
+ * Time: 10:25 AM
  */
-Route::getJs(array("earningScript"), "Defaults", array(), FALSE);
+Route::getJs(array("productionScript"), "Defaults", array(), FALSE);
 ?>
-<input type="hidden" id="earnInp" value="1">
 <section class="content">
     <!-- Default box -->
     <div class="box">
@@ -58,4 +57,3 @@ Route::getJs(array("earningScript"), "Defaults", array(), FALSE);
     </div>
     <!-- /.box -->
 </section>
-<!-- /.content -->

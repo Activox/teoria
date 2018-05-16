@@ -21,6 +21,10 @@ class Post
         "getStyle" => "Defaults@Default.getStyle",
         "table" => "Defaults@Default.tableProblem",
         "reportProblem" => "Defaults@Default.getReportProblem",
+        "reportGanancia" => "Defaults@Default.getReportGanancia",
+        "reportTime" => "Defaults@Default.getReportTime",
+        "getReportProblem" => "Defaults@Default.getReportProblem",
+        "getReportProduction" => "Defaults@Default.getReportProduction",
         "reportProduccion" => "Defaults@Default.getReportProduccion"
     );
 }
